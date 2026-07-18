@@ -6,9 +6,6 @@ services:
       - ASPNETCORE_HTTPS_PORTS=8081
       - ASPNETCORE_Kestrel__Certificates__Default__Password=Misha10001100
       - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
-    ports:
-      - "8080"
-      - "8081"
     volumes:
       - ${USERPROFILE:-~}/.aspnet/https:/https:ro
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
