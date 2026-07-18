@@ -7,10 +7,11 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["Evently.Api/Evently.Api.csproj", "Evently.Api/"]
-RUN dotnet restore "Evently.Api/Evently.Api.csproj"
+COPY ["src/API/Evently.Api/Evently.Api.csproj", "src/API/Evently.Api/"]
+COPY ["src/Modules/Events/Evently.Modules.Events.Api/Evently.Modules.Events.Api.csproj", "src/Modules/Events/Evently.Modules.Events.Api/"]
+RUN dotnet restore "src/API/Evently.Api/Evently.Api.csproj"
 COPY . .
-WORKDIR "/src/Evently.Api"
+WORKDIR "/src/src/API/Evently.Api"
 RUN dotnet build "./Evently.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish

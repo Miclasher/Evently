@@ -1,10 +1,10 @@
 services:
   evently.api:
-    image: ${DOCKER_REGISTRY-}eventlyapi
+    image: ${DOCKER_REGISTRY-}evently.api
     container_name: Evently.Api
     build:
       context: .
-      dockerfile: Evently.Api/Dockerfile
+      dockerfile: src/API/Evently.Api/Dockerfile
     ports:
       - "5000:8080"
       - "5001:8081"
