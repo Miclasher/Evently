@@ -1,6 +1,6 @@
-﻿services:
+services:
   evently.api:
-    image: evently.api
+    image: ${DOCKER_REGISTRY-}eventlyapi
     container_name: Evently.Api
     build:
       context: .
@@ -8,7 +8,7 @@
     ports:
       - "5000:8080"
       - "5001:8081"
-  
+
   evently.database:
     image: postgres:latest
     container_name: Evently.Database
