@@ -1,9 +1,10 @@
 <Solution>
   <Folder Name="/src/" />
   <Folder Name="/src/API/">
-    <Project Path="Evently.Api/Evently.Api.csproj" />
+    <Project Path="src/API/Evently.Api/Evently.Api.csproj" />
   </Folder>
   <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/Events/" />
   <Folder Name="/tests/" />
   <Project Path="docker-compose.dcproj">
     <Build />
