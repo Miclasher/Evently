@@ -1,5 +1,5 @@
 using Evently.Api.Extensions;
-using Evently.Modules.Events.Api.Events;
+using Evently.Modules.Events.Infrastructure;
 
 namespace Evently.Api;
 
