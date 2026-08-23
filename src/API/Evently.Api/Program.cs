@@ -2,6 +2,7 @@ using Evently.Api.Extensions;
 using Evently.Common.Application;
 using Evently.Common.Infrastructure;
 using Evently.Modules.Events.Infrastructure;
+using Serilog;
 
 namespace Evently.Api;
 
@@ -11,6 +12,8 @@ internal static class Program
     {
         WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
+        builder.Host.UseSerilog((ctx, config) => config.ReadFrom.Configuration(ctx.Configuration));
+        
         builder.Services.AddOpenApi();
 
         builder.Configuration.AddModuleConfiguration(["events"]);
@@ -30,6 +33,8 @@ internal static class Program
         }
         
         EventsModule.MapEndpoints(app);
+
+        app.UseSerilogRequestLogging();
 
         app.Run();
     }
