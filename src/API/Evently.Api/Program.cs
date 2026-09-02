@@ -1,4 +1,5 @@
 using Evently.Api.Extensions;
+using Evently.Api.Middleware;
 using Evently.Common.Application;
 using Evently.Common.Infrastructure;
 using Evently.Modules.Events.Infrastructure;
@@ -13,6 +14,10 @@ internal static class Program
         WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
         builder.Host.UseSerilog((ctx, config) => config.ReadFrom.Configuration(ctx.Configuration));
+
+        builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+        
+        builder.Services.AddProblemDetails();
         
         builder.Services.AddOpenApi();
 
@@ -36,6 +41,8 @@ internal static class Program
 
         app.UseSerilogRequestLogging();
 
+        app.UseExceptionHandler();
+        
         app.Run();
     }
 }
