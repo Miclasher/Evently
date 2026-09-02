@@ -2,6 +2,7 @@ using Evently.Api.Extensions;
 using Evently.Api.Middleware;
 using Evently.Common.Application;
 using Evently.Common.Infrastructure;
+using Evently.Common.Presentation.Endpoints;
 using Evently.Modules.Events.Infrastructure;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -46,9 +47,9 @@ internal static class Program
             app.ApplyMigrations();
             app.MapOpenApi();
         }
-        
-        EventsModule.MapEndpoints(app);
 
+        app.MapEndpoints();
+        
         app.UseHealthChecks("/health", new HealthCheckOptions()
         {
             ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
