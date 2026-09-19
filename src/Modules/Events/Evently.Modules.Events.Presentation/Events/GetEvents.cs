@@ -1,6 +1,6 @@
 ﻿using Evently.Common.Domain;
-using Evently.Common.Presentation.ApiResults;
 using Evently.Common.Presentation.Endpoints;
+using Evently.Common.Presentation.Results;
 using Evently.Modules.Events.Application.Events.GetEvents;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -11,7 +11,7 @@ namespace Evently.Modules.Events.Presentation.Events;
 
 internal sealed class GetEvents : IEndpoint
 {
-    public  void MapEndpoint(IEndpointRouteBuilder app)
+    public void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("events", async (ISender sender) =>
         {

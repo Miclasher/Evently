@@ -26,11 +26,9 @@ internal sealed class UserRegisteredDomainEventHandler(ISender sender, IEventBus
                 notification.Id,
                 notification.OccurredOnUtc,
                 result.Value.Id,
+                result.Value.Email,
                 result.Value.FirstName,
-                result.Value.LastName,
-                result.Value.Email
-            ),
-            cancellationToken
-        );
+                result.Value.LastName),
+            cancellationToken);
     }
 }

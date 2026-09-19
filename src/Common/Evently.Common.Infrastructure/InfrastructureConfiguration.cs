@@ -5,7 +5,7 @@ using Evently.Common.Application.EventBus;
 using Evently.Common.Infrastructure.Caching;
 using Evently.Common.Infrastructure.Clock;
 using Evently.Common.Infrastructure.Data;
-using Evently.Common.Infrastructure.Interceptors;
+using Evently.Common.Infrastructure.Outbox;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -37,7 +37,7 @@ public static class InfrastructureConfiguration
 
         services.TryAddSingleton<PublishDomainEventsInterceptor>();
         
-        services.TryAddSingleton<ICachingService, CachingService>();
+        services.TryAddSingleton<ICacheService, CacheService>();
         
         services.TryAddSingleton<IEventBus, EventBus.EventBus>();
 
