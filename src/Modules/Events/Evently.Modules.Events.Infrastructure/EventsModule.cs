@@ -21,21 +21,19 @@ public static class EventsModule
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.AddEndpoints(Presentation.AssemblyReference.Assembly);
-
         services.AddInfrastructure(configuration);
+
+        services.AddEndpoints(Presentation.AssemblyReference.Assembly);
 
         return services;
     }
 
     private static void AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        string databaseConnectionString = configuration.GetConnectionString("Database")!;
-
         services.AddDbContext<EventsDbContext>((sp, options) =>
             options
                 .UseNpgsql(
-                    databaseConnectionString,
+                    configuration.GetConnectionString("Database"),
                     npgsqlOptions => npgsqlOptions
                         .MigrationsHistoryTable(HistoryRepository.DefaultTableName, Schemas.Events))
                 .UseSnakeCaseNamingConvention()

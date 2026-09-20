@@ -1,4 +1,4 @@
-namespace Evently.Modules.Users.Infrastructure.Identity;
+﻿namespace Evently.Modules.Users.Infrastructure.Identity;
 
 internal sealed record UserRepresentation(
     string Username,

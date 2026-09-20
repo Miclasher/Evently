@@ -1,4 +1,4 @@
-using Evently.Common.Domain;
+﻿using Evently.Common.Domain;
 
 namespace Evently.Modules.Users.Application.Abstractions.Identity;
 

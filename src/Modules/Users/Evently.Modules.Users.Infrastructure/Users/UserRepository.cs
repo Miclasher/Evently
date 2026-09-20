@@ -17,7 +17,7 @@ internal sealed class UserRepository(UsersDbContext context) : IUserRepository
         {
             context.Attach(role);
         }
-        
+
         context.Users.Add(user);
     }
 }

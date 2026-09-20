@@ -1,15 +1,17 @@
-using System.Net;
+﻿using System.Net;
 using Evently.Common.Domain;
 using Evently.Modules.Users.Application.Abstractions.Identity;
 using Microsoft.Extensions.Logging;
 
 namespace Evently.Modules.Users.Infrastructure.Identity;
 
-internal sealed class IdentityProviderService(KeyCloakClient keyCloakClient, ILogger<IdentityProviderService> logger) : IIdentityProviderService
-{    
-    private const string PasswordCredentialType = "Password";
+internal sealed class IdentityProviderService(KeyCloakClient keyCloakClient, ILogger<IdentityProviderService> logger)
+    : IIdentityProviderService
+{
+    private const string PasswordCredentialType = "password";
 
-    public async Task<Result<string>> RegisterUserAsync(UserModel user, CancellationToken cancellationToken)
+    // POST /admin/realms/{realm}/users
+    public async Task<Result<string>> RegisterUserAsync(UserModel user, CancellationToken cancellationToken = default)
     {
         var userRepresentation = new UserRepresentation(
             user.Email,
@@ -26,9 +28,9 @@ internal sealed class IdentityProviderService(KeyCloakClient keyCloakClient, ILo
 
             return identityId;
         }
-        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Conflict)
+        catch (HttpRequestException exception) when (exception.StatusCode == HttpStatusCode.Conflict)
         {
-            logger.LogError(ex, "User registration failed.");
+            logger.LogError(exception, "User registration failed");
 
             return Result.Failure<string>(IdentityProviderErrors.EmailIsNotUnique);
         }

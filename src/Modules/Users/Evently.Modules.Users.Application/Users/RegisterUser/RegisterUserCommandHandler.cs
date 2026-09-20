@@ -22,7 +22,7 @@ internal sealed class RegisterUserCommandHandler(
         {
             return Result.Failure<Guid>(result.Error);
         }
-        
+
         var user = User.Create(request.Email, request.FirstName, request.LastName, result.Value);
 
         userRepository.Insert(user);
