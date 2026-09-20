@@ -20,5 +20,9 @@
     <ItemGroup>
       <ProjectReference Include="..\Evently.Common.Application\Evently.Common.Application.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Authorization\" />
+    </ItemGroup>
     
 </Project>
