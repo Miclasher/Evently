@@ -12,6 +12,7 @@ using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Npgsql;
+using Quartz;
 using StackExchange.Redis;
 
 namespace Evently.Common.Infrastructure;
@@ -20,6 +21,7 @@ public static class InfrastructureConfiguration
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services,
         Action<IRegistrationConfigurator>[] registerConsumersActions,
+        Action<IQuartzBuilder>[] configureQuartzJobActions,
         string databaseConnectionString, 
         string redisConnectionString)
     {
@@ -34,6 +36,16 @@ public static class InfrastructureConfiguration
 
         services.TryAddSingleton<IDateTimeProvider, DateTimeProvider>();
 
+        services.AddQuartz(q =>
+        {
+            foreach (Action<IQuartzBuilder> action in configureQuartzJobActions)
+            {
+                action(q);
+            }
+        });
+            
+        services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
+        
         try
         {
             IConnectionMultiplexer connectionMultiplexer = ConnectionMultiplexer.Connect(redisConnectionString);
@@ -47,7 +59,7 @@ public static class InfrastructureConfiguration
             services.AddDistributedMemoryCache();
         }
 
-        services.TryAddSingleton<PublishDomainEventsInterceptor>();
+        services.TryAddSingleton<InsertOutboxMessagesInterceptor>();
         
         services.TryAddSingleton<ICacheService, CacheService>();
         

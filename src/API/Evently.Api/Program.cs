@@ -39,6 +39,9 @@ builder.Services.AddInfrastructure(
         TicketingModule.ConfigureConsumers,
         AttendanceModule.ConfigureConsumers
     ],
+    [
+        UsersModule.ConfigureQuartzJobs
+    ],
     databaseConnectionString,
     redisConnectionString);
 
