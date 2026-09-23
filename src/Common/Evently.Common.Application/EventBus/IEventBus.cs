@@ -1,7 +1,7 @@
-namespace Evently.Common.Application.EventBus;
+﻿namespace Evently.Common.Application.EventBus;
 
 public interface IEventBus
 {
-    Task PublishAsync<T>(T intergrationEvent, CancellationToken cancellationToken = default) 
-        where T : class, IIntegrationEvent;
+    Task PublishAsync<T>(T integrationEvent, CancellationToken cancellationToken = default)
+        where T : IIntegrationEvent;
 }

@@ -21,7 +21,7 @@ internal sealed class ValidationPipelineBehavior<TRequest, TResponse>(
 
         if (validationFailures.Length == 0)
         {
-            return await next(cancellationToken);
+            return await next();
         }
 
         if (typeof(TResponse).IsGenericType &&
@@ -31,7 +31,7 @@ internal sealed class ValidationPipelineBehavior<TRequest, TResponse>(
 
             MethodInfo? failureMethod = typeof(Result<>)
                 .MakeGenericType(resultType)
-                .GetMethod(nameof(Result<>.ValidationFailure));
+                .GetMethod(nameof(Result<object>.ValidationFailure));
 
             if (failureMethod is not null)
             {

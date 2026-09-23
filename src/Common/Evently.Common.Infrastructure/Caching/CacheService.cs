@@ -1,11 +1,11 @@
-using System.Buffers;
+﻿using System.Buffers;
 using System.Text.Json;
 using Evently.Common.Application.Caching;
 using Microsoft.Extensions.Caching.Distributed;
 
 namespace Evently.Common.Infrastructure.Caching;
 
-public sealed class CacheService(IDistributedCache cache) : ICacheService
+internal sealed class CacheService(IDistributedCache cache) : ICacheService
 {
     public async Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default)
     {
@@ -14,11 +14,15 @@ public sealed class CacheService(IDistributedCache cache) : ICacheService
         return bytes is null ? default : Deserialize<T>(bytes);
     }
 
-    public Task SetAsync<T>(string key, T value, TimeSpan? expiration, CancellationToken cancellationToken = default)
+    public Task SetAsync<T>(
+        string key,
+        T value,
+        TimeSpan? expiration = null,
+        CancellationToken cancellationToken = default)
     {
         byte[] bytes = Serialize(value);
 
-        return cache.SetAsync(key, bytes, CachingOptions.Create(expiration), cancellationToken);
+        return cache.SetAsync(key, bytes, CacheOptions.Create(expiration), cancellationToken);
     }
 
     public Task RemoveAsync(string key, CancellationToken cancellationToken = default) =>
@@ -26,7 +30,7 @@ public sealed class CacheService(IDistributedCache cache) : ICacheService
 
     private static T Deserialize<T>(byte[] bytes)
     {
-        return JsonSerializer.Deserialize<T>(bytes);
+        return JsonSerializer.Deserialize<T>(bytes)!;
     }
 
     private static byte[] Serialize<T>(T value)
@@ -34,7 +38,6 @@ public sealed class CacheService(IDistributedCache cache) : ICacheService
         var buffer = new ArrayBufferWriter<byte>();
         using var writer = new Utf8JsonWriter(buffer);
         JsonSerializer.Serialize(writer, value);
-
         return buffer.WrittenSpan.ToArray();
     }
 }

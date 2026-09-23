@@ -11,4 +11,8 @@
 	<InternalsVisibleTo Include="Evently.IntegrationTests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Database\Migrations\" />
+  </ItemGroup>
+
 </Project>

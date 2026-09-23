@@ -1,14 +1,13 @@
-namespace Evently.Common.Application.EventBus;
+﻿namespace Evently.Common.Application.EventBus;
 
 public abstract class IntegrationEvent : IIntegrationEvent
 {
-    protected IntegrationEvent(Guid id, DateTime occuredOnUtc)
+    protected IntegrationEvent(Guid id, DateTime occurredOnUtc)
     {
         Id = id;
-        OccuredOnUtc = occuredOnUtc;
+        OccurredOnUtc = occurredOnUtc;
     }
-    
+
     public Guid Id { get; init; }
-    
-    public DateTime OccuredOnUtc { get; init; }
+    public DateTime OccurredOnUtc { get; init; }
 }

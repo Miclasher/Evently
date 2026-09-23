@@ -1,6 +1,5 @@
 ﻿using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Text.Json.Serialization;
 using Microsoft.Extensions.Options;
 
 namespace Evently.Modules.Users.Infrastructure.Identity;
@@ -45,11 +44,5 @@ internal sealed class KeyCloakAuthDelegatingHandler(IOptions<KeyCloakOptions> op
         authorizationResponse.EnsureSuccessStatusCode();
 
         return await authorizationResponse.Content.ReadFromJsonAsync<AuthToken>(cancellationToken);
-    }
-
-    internal sealed class AuthToken
-    {
-        [JsonPropertyName("access_token")]
-        public string AccessToken { get; init; }
     }
 }

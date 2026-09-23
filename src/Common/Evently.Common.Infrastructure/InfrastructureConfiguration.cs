@@ -1,3 +1,4 @@
+﻿using Dapper;
 using Evently.Common.Application.Caching;
 using Evently.Common.Application.Clock;
 using Evently.Common.Application.Data;
@@ -7,11 +8,14 @@ using Evently.Common.Infrastructure.Authorization;
 using Evently.Common.Infrastructure.Caching;
 using Evently.Common.Infrastructure.Clock;
 using Evently.Common.Infrastructure.Data;
+using Evently.Common.Infrastructure.EventBus;
 using Evently.Common.Infrastructure.Outbox;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Npgsql;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Quartz;
 using StackExchange.Redis;
 
@@ -19,38 +23,44 @@ namespace Evently.Common.Infrastructure;
 
 public static class InfrastructureConfiguration
 {
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services,
-        Action<IRegistrationConfigurator>[] registerConsumersActions,
-        Action<IQuartzBuilder>[] configureQuartzJobActions,
-        string databaseConnectionString, 
+    public static IServiceCollection AddInfrastructure(
+        this IServiceCollection services,
+        string serviceName,
+        Action<IRegistrationConfigurator, string>[] moduleConfigureConsumers,
+        RabbitMqSettings rabbitMqSettings,
+        string databaseConnectionString,
         string redisConnectionString)
     {
         services.AddAuthenticationInternal();
-        
-        services.AddAuthorizationInternal();
-        
-        NpgsqlDataSource npgsqlDataSource = new NpgsqlDataSourceBuilder(databaseConnectionString).Build();
-        services.TryAddSingleton(npgsqlDataSource);
 
-        services.AddScoped<IDbConnectionFactory, DbConnectionFactory>();
+        services.AddAuthorizationInternal();
 
         services.TryAddSingleton<IDateTimeProvider, DateTimeProvider>();
 
-        services.AddQuartz(q =>
+        services.TryAddSingleton<IEventBus, EventBus.EventBus>();
+
+        services.TryAddSingleton<InsertOutboxMessagesInterceptor>();
+
+        NpgsqlDataSource npgsqlDataSource = new NpgsqlDataSourceBuilder(databaseConnectionString).Build();
+        services.TryAddSingleton(npgsqlDataSource);
+
+        services.TryAddScoped<IDbConnectionFactory, DbConnectionFactory>();
+
+        SqlMapper.AddTypeHandler(new GenericArrayHandler<string>());
+
+        services.AddQuartz(configurator =>
         {
-            foreach (Action<IQuartzBuilder> action in configureQuartzJobActions)
-            {
-                action(q);
-            }
+            var scheduler = Guid.NewGuid();
+            configurator.SchedulerId = $"default-id-{scheduler}";
+            configurator.SchedulerName = $"default-name-{scheduler}";
         });
-            
+
         services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
-        
+
         try
         {
             IConnectionMultiplexer connectionMultiplexer = ConnectionMultiplexer.Connect(redisConnectionString);
-            services.TryAddSingleton(connectionMultiplexer);
-
+            services.AddSingleton(connectionMultiplexer);
             services.AddStackExchangeRedisCache(options =>
                 options.ConnectionMultiplexerFactory = () => Task.FromResult(connectionMultiplexer));
         }
@@ -59,26 +69,45 @@ public static class InfrastructureConfiguration
             services.AddDistributedMemoryCache();
         }
 
-        services.TryAddSingleton<InsertOutboxMessagesInterceptor>();
-        
         services.TryAddSingleton<ICacheService, CacheService>();
-        
-        services.TryAddSingleton<IEventBus, EventBus.EventBus>();
 
         services.AddMassTransit(configure =>
         {
-            foreach (Action<IRegistrationConfigurator> action in registerConsumersActions)
+            string instanceId = serviceName.ToLowerInvariant().Replace('.', '-');
+            foreach (Action<IRegistrationConfigurator, string> configureConsumers in moduleConfigureConsumers)
             {
-                action(configure);
+                configureConsumers(configure, instanceId);
             }
-            
+
             configure.SetKebabCaseEndpointNameFormatter();
-            
-            configure.UsingInMemory((context, cfg) =>
+
+            configure.UsingRabbitMq((context, cfg) =>
             {
+                cfg.Host(new Uri(rabbitMqSettings.Host), h =>
+                {
+                    h.Username(rabbitMqSettings.Username);
+                    h.Password(rabbitMqSettings.Password);
+                });
+
                 cfg.ConfigureEndpoints(context);
             });
         });
+
+        services
+            .AddOpenTelemetry()
+            .ConfigureResource(resource => resource.AddService(serviceName))
+            .WithTracing(tracing =>
+            {
+                tracing
+                    .AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    .AddEntityFrameworkCoreInstrumentation()
+                    .AddRedisInstrumentation()
+                    .AddNpgsql()
+                    .AddSource(MassTransit.Logging.DiagnosticHeaders.DefaultListenerName);
+
+                tracing.AddOtlpExporter();
+            });
 
         return services;
     }
