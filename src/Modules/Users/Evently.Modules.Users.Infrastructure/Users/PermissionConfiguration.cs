@@ -31,7 +31,8 @@ internal sealed class PermissionConfiguration : IEntityTypeConfiguration<Permiss
             Permission.CreateOrder,
             Permission.GetTickets,
             Permission.CheckInTicket,
-            Permission.GetEventStatistics);
+            Permission.GetEventStatistics,
+            Permission.AccessPremium);
 
         builder
             .HasMany<Role>()
@@ -53,6 +54,19 @@ internal sealed class PermissionConfiguration : IEntityTypeConfiguration<Permiss
                     CreateRolePermission(Role.Member, Permission.CreateOrder),
                     CreateRolePermission(Role.Member, Permission.GetTickets),
                     CreateRolePermission(Role.Member, Permission.CheckInTicket),
+                    // Premium permissions
+                    CreateRolePermission(Role.Premium, Permission.GetUser),
+                    CreateRolePermission(Role.Premium, Permission.ModifyUser),
+                    CreateRolePermission(Role.Premium, Permission.SearchEvents),
+                    CreateRolePermission(Role.Premium, Permission.GetTicketTypes),
+                    CreateRolePermission(Role.Premium, Permission.GetCart),
+                    CreateRolePermission(Role.Premium, Permission.AddToCart),
+                    CreateRolePermission(Role.Premium, Permission.RemoveFromCart),
+                    CreateRolePermission(Role.Premium, Permission.GetOrders),
+                    CreateRolePermission(Role.Premium, Permission.CreateOrder),
+                    CreateRolePermission(Role.Premium, Permission.GetTickets),
+                    CreateRolePermission(Role.Premium, Permission.CheckInTicket),
+                    CreateRolePermission(Role.Premium, Permission.AccessPremium),
                     // Admin permissions
                     CreateRolePermission(Role.Administrator, Permission.GetUser),
                     CreateRolePermission(Role.Administrator, Permission.ModifyUser),

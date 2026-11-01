@@ -22,6 +22,11 @@ builder.Host.UseSerilog((context, loggerConfig) => loggerConfig.ReadFrom.Configu
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
+builder.Services
+    .AddMcpServer()
+    .WithHttpTransport()
+    .WithToolsFromAssembly();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 
@@ -89,5 +94,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapEndpoints();
+
+app.MapMcp("mcp").RequireAuthorization();
 
 await app.RunAsync();

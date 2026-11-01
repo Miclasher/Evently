@@ -9,6 +9,7 @@ using Evently.Common.Infrastructure.Caching;
 using Evently.Common.Infrastructure.Clock;
 using Evently.Common.Infrastructure.Data;
 using Evently.Common.Infrastructure.EventBus;
+using Evently.Common.Infrastructure.FeatureFlags;
 using Evently.Common.Infrastructure.Outbox;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
@@ -34,6 +35,8 @@ public static class InfrastructureConfiguration
         services.AddAuthenticationInternal();
 
         services.AddAuthorizationInternal();
+
+        services.AddFeatureFlags();
 
         services.TryAddSingleton<IDateTimeProvider, DateTimeProvider>();
 

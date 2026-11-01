@@ -19,6 +19,7 @@ public sealed class Permission
     public static readonly Permission GetTickets = new("tickets:read");
     public static readonly Permission CheckInTicket = new("tickets:check-in");
     public static readonly Permission GetEventStatistics = new("event-statistics:read");
+    public static readonly Permission AccessPremium = new("premium:access");
 
     public Permission(string code)
     {

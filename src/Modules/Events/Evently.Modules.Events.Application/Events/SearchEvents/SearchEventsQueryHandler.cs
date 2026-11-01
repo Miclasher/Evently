@@ -1,5 +1,6 @@
 ﻿using System.Data.Common;
 using Dapper;
+using Evently.Common.Application.Caching;
 using Evently.Common.Application.Data;
 using Evently.Common.Application.Messaging;
 using Evently.Common.Domain;
@@ -8,7 +9,7 @@ using Evently.Modules.Events.Domain.Events;
 
 namespace Evently.Modules.Events.Application.Events.SearchEvents;
 
-internal sealed class SearchEventsQueryHandler(IDbConnectionFactory dbConnectionFactory)
+internal sealed class SearchEventsQueryHandler(IDbConnectionFactory dbConnectionFactory, ICacheService cacheService)
     : IQueryHandler<SearchEventsQuery, SearchEventsResponse>
 {
 
@@ -16,6 +17,15 @@ internal sealed class SearchEventsQueryHandler(IDbConnectionFactory dbConnection
         SearchEventsQuery request,
         CancellationToken cancellationToken)
     {
+        string cacheKey = await SearchEventsCache.CreateKeyAsync(cacheService, request, cancellationToken);
+
+        SearchEventsResponse? cached = await cacheService.GetAsync<SearchEventsResponse>(cacheKey, cancellationToken);
+
+        if (cached is not null)
+        {
+            return cached;
+        }
+
         await using DbConnection connection = await dbConnectionFactory.OpenConnectionAsync();
 
         var parameters = new SearchEventsParameters(
@@ -23,14 +33,23 @@ internal sealed class SearchEventsQueryHandler(IDbConnectionFactory dbConnection
             request.CategoryId,
             request.StartDate?.Date,
             request.EndDate?.Date,
-            request.PageSize,
-            (request.Page - 1) * request.PageSize);
+            request.Limit,
+            request.Skip);
 
         IReadOnlyCollection<EventResponse> events = await GetEventsAsync(connection, parameters);
 
         int totalCount = await CountEventsAsync(connection, parameters);
 
-        return new SearchEventsResponse(request.Page, request.PageSize, totalCount, events);
+        var response = new SearchEventsResponse(
+            request.Skip,
+            request.Limit,
+            totalCount,
+            request.Skip + events.Count < totalCount,
+            events);
+
+        await cacheService.SetAsync(cacheKey, response, SearchEventsCache.Expiration, cancellationToken);
+
+        return response;
     }
 
     private static async Task<IReadOnlyCollection<EventResponse>> GetEventsAsync(

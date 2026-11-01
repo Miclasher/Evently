@@ -6,5 +6,5 @@ public sealed record SearchEventsQuery(
     Guid? CategoryId,
     DateTime? StartDate,
     DateTime? EndDate,
-    int Page,
-    int PageSize) : IQuery<SearchEventsResponse>;
+    int Skip,
+    int Limit) : IQuery<SearchEventsResponse>;

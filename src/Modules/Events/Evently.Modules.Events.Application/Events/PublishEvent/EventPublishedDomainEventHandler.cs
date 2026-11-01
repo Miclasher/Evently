@@ -1,15 +1,17 @@
-﻿using Evently.Common.Application.EventBus;
+﻿using Evently.Common.Application.Caching;
+using Evently.Common.Application.EventBus;
 using Evently.Common.Application.Exceptions;
 using Evently.Common.Application.Messaging;
 using Evently.Common.Domain;
 using Evently.Modules.Events.Application.Events.GetEvent;
 using Evently.Modules.Events.Domain.Events;
+using Evently.Modules.Events.Application.Events.SearchEvents;
 using Evently.Modules.Events.IntegrationEvents;
 using MediatR;
 
 namespace Evently.Modules.Events.Application.Events.PublishEvent;
 
-internal sealed class EventPublishedDomainEventHandler(ISender sender, IEventBus eventBus)
+internal sealed class EventPublishedDomainEventHandler(ISender sender, IEventBus eventBus, ICacheService cacheService)
     : DomainEventHandler<EventPublishedDomainEvent>
 {
     public override async Task Handle(
@@ -22,6 +24,8 @@ internal sealed class EventPublishedDomainEventHandler(ISender sender, IEventBus
         {
             throw new EventlyException(nameof(GetEventQuery), result.Error);
         }
+
+        await SearchEventsCache.InvalidateAsync(cacheService, cancellationToken);
 
         await eventBus.PublishAsync(
             new EventPublishedIntegrationEvent(

@@ -1,0 +1,910 @@
+{
+  "info": {
+    "name": "Evently - Auth, Pagination & Feature Flags (QA3)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Run with the docker-compose stack up (API on :5000, Keycloak on :18080). Run the whole collection in order (Collection Runner / newman)."
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000"
+    },
+    {
+      "key": "keycloakUrl",
+      "value": "http://localhost:18080"
+    },
+    {
+      "key": "password",
+      "value": "Test1234!"
+    },
+    {
+      "key": "memberEmail",
+      "value": ""
+    },
+    {
+      "key": "memberToken",
+      "value": ""
+    },
+    {
+      "key": "garbageToken",
+      "value": "not.a.jwt"
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Setup",
+      "item": [
+        {
+          "name": "Generate unique member email",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('memberEmail', 'member-' + Date.now() + '@evently.test');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Register member",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('registered (200) or already exists (409)', () => pm.expect([200,409]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "register"
+              ],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{memberEmail}}\",\n  \"password\": \"{{password}}\",\n  \"firstName\": \"Auth\",\n  \"lastName\": \"Tester\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login member",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('memberToken', pm.response.json().access_token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password"
+                },
+                {
+                  "key": "client_id",
+                  "value": "evently-public-client"
+                },
+                {
+                  "key": "username",
+                  "value": "{{memberEmail}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloakUrl}}/realms/evently/protocol/openid-connect/token",
+              "host": [
+                "{{keycloakUrl}}"
+              ],
+              "path": [
+                "realms",
+                "evently",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Authentication (401)",
+      "item": [
+        {
+          "name": "No token -> profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "profile"
+              ],
+              "query": []
+            }
+          }
+        },
+        {
+          "name": "No token -> search events",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/events/search",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "events",
+                "search"
+              ],
+              "query": []
+            }
+          }
+        },
+        {
+          "name": "No token -> MCP endpoint",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mcp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mcp"
+              ],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Garbage token -> profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{garbageToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "profile"
+              ],
+              "query": []
+            }
+          }
+        },
+        {
+          "name": "Valid token -> profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('email matches', () => pm.expect(pm.response.json().email).to.eql(pm.collectionVariables.get('memberEmail')));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{memberToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "profile"
+              ],
+              "query": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Authorization (403)",
+      "item": [
+        {
+          "name": "Member cannot list all events (events:read)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{memberToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/events",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "events"
+              ],
+              "query": []
+            }
+          }
+        },
+        {
+          "name": "Member cannot create category (categories:update)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{memberToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categories"
+              ],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Forbidden\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Member cannot read categories (categories:read)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{memberToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categories"
+              ],
+              "query": []
+            }
+          }
+        },
+        {
+          "name": "Member can search events (events:search)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{memberToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/events/search",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "events",
+                "search"
+              ],
+              "query": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Pagination (B1)",
+      "item": [
+        {
+          "name": "Invalid limit -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{memberToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/events/search?limit=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "events",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "0"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Negative skip -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{memberToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/events/search?skip=-1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "events",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "skip",
+                  "value": "-1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Response has skip/limit/totalCount/nextLink",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test('has paging fields', () => { pm.expect(b).to.have.property('skip'); pm.expect(b).to.have.property('limit'); pm.expect(b).to.have.property('totalCount'); pm.expect(b).to.have.property('nextLink'); });",
+                  "pm.test('nextLink present only when more data exists', () => { if (b.totalCount > 1) { pm.expect(b.nextLink).to.include('skip=1'); } else { pm.expect(b.nextLink).to.be.null; } });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{memberToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/events/search?skip=0&limit=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "events",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "skip",
+                  "value": "0"
+                },
+                {
+                  "key": "limit",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Feature flags / plans (B6)",
+      "item": [
+        {
+          "name": "Member: premium flag disabled",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('PremiumPage is false', () => pm.expect(pm.response.json().PremiumPage).to.eql(false));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{memberToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/profile/features",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "profile",
+                "features"
+              ],
+              "query": []
+            }
+          }
+        },
+        {
+          "name": "Member: premium page -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{memberToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/premium",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "premium"
+              ],
+              "query": []
+            }
+          }
+        },
+        {
+          "name": "Invalid plan -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{memberToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/profile/plan",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "profile",
+                "plan"
+              ],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plan\": \"Gold\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Upgrade to Premium",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{memberToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/profile/plan",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "profile",
+                "plan"
+              ],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plan\": \"Premium\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Premium: premium flag enabled",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('PremiumPage is true', () => pm.expect(pm.response.json().PremiumPage).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{memberToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/profile/features",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "profile",
+                "features"
+              ],
+              "query": []
+            }
+          }
+        },
+        {
+          "name": "Premium: premium page -> 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{memberToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/premium",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "premium"
+              ],
+              "query": []
+            }
+          }
+        },
+        {
+          "name": "Downgrade to Member",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{memberToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/profile/plan",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "profile",
+                "plan"
+              ],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plan\": \"Member\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Member again: premium page -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{memberToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/premium",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "premium"
+              ],
+              "query": []
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

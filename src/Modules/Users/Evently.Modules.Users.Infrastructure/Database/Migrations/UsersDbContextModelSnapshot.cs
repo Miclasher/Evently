@@ -209,6 +209,10 @@ namespace Evently.Modules.Users.Infrastructure.Database.Migrations
                         new
                         {
                             Code = "event-statistics:read"
+                        },
+                        new
+                        {
+                            Code = "premium:access"
                         });
                 });
 
@@ -228,6 +232,10 @@ namespace Evently.Modules.Users.Infrastructure.Database.Migrations
                         new
                         {
                             Name = "Member"
+                        },
+                        new
+                        {
+                            Name = "Premium"
                         },
                         new
                         {
@@ -352,6 +360,66 @@ namespace Evently.Modules.Users.Infrastructure.Database.Migrations
                         {
                             PermissionCode = "tickets:check-in",
                             RoleName = "Member"
+                        },
+                        new
+                        {
+                            PermissionCode = "users:read",
+                            RoleName = "Premium"
+                        },
+                        new
+                        {
+                            PermissionCode = "users:update",
+                            RoleName = "Premium"
+                        },
+                        new
+                        {
+                            PermissionCode = "events:search",
+                            RoleName = "Premium"
+                        },
+                        new
+                        {
+                            PermissionCode = "ticket-types:read",
+                            RoleName = "Premium"
+                        },
+                        new
+                        {
+                            PermissionCode = "carts:read",
+                            RoleName = "Premium"
+                        },
+                        new
+                        {
+                            PermissionCode = "carts:add",
+                            RoleName = "Premium"
+                        },
+                        new
+                        {
+                            PermissionCode = "carts:remove",
+                            RoleName = "Premium"
+                        },
+                        new
+                        {
+                            PermissionCode = "orders:read",
+                            RoleName = "Premium"
+                        },
+                        new
+                        {
+                            PermissionCode = "orders:create",
+                            RoleName = "Premium"
+                        },
+                        new
+                        {
+                            PermissionCode = "tickets:read",
+                            RoleName = "Premium"
+                        },
+                        new
+                        {
+                            PermissionCode = "tickets:check-in",
+                            RoleName = "Premium"
+                        },
+                        new
+                        {
+                            PermissionCode = "premium:access",
+                            RoleName = "Premium"
                         },
                         new
                         {

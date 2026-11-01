@@ -52,4 +52,15 @@ public sealed class User : Entity
 
         Raise(new UserProfileUpdatedDomainEvent(Id, FirstName, LastName));
     }
+
+    public void ChangePlan(Role plan)
+    {
+        if (_roles.Any(r => r.Name == plan.Name))
+        {
+            return;
+        }
+
+        _roles.RemoveAll(r => r.Name == Role.Member.Name || r.Name == Role.Premium.Name);
+        _roles.Add(plan);
+    }
 }

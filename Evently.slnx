@@ -74,6 +74,7 @@
         <Project Path="src/Modules/Attendance/Evently.Modules.Attendance.UnitTests/Evently.Modules.Attendance.UnitTests.csproj"/>
     </Folder>
     <Folder Name="/test/">
+        <Project Path="test/Evently.AuthTests/Evently.AuthTests.csproj"/>
         <Project Path="test/Evently.ArchitectureTests/Evently.ArchitectureTests.csproj"/>
         <Project Path="test/Evently.IntegrationTests/Evently.IntegrationTests.csproj"/>
     </Folder>
